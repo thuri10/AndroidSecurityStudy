@@ -1,69 +1,67 @@
-## 2023HW移动端武器库工具技巧分享
+## 2023HW Mobile Arsenal Tools Tips Sharing
 
-（PS：文章中包含大量付费的链接、工具和商品，不喜勿读）
+(PS: Articles with expensive links, tools, and merchandise to read)
 
 ### Intro
 
-HW也开展有些年头了，2023的HW也如火如荼进行当中，今年HW的感受每个人都深有体会，这里不再赘述，笔者只结合自身的特长与实际任务中的经验，分享一下HW中移动端的分析打点与常见工具(AKA武器)及其应用的场景。
+HW has been around for some years, and HW 2023 is in full swing. What everyone feels at HW this year will no longer need to discuss. Combining my own expertise with real-world tasks, I'll share some of HW's mobile-side insights with common tools (AKA weapons) and their applications.
 
-很多大型企业集团的OA等系统提供了移动端的登录和使用方式，这些系统由于相对封闭、使用群体固定且缺少测试存着诸多安全问题，很多(存在漏洞的)接口只存在于APP或者小程序，必须通过移动端逆向工程来找到这些接口。
+Many large-scale enterprise group OA systems provide mobile terminal login and use, these systems due to relatively closed, use groups fixed and lack of testing there are many security issues, many (loopholes) interfaces exist only in the APP or small programs, must be through the mobile reverse engineering to find these interfaces.
 
-移动端的逆向，不外乎环境搭建、抓包分析和算法调用这三个主要方面。这里笔者分享一下各个方向领域的当前最为前沿、实用和高效的工具，帮助大家提高效率，事半功倍。以下所有工具的综合使用案例在MobileCTF项目中均有完整体现，欢迎大家踊跃尝试练手升级：https://github.com/r0ysue/MobileCTF/
+The reverse of the mobile terminal does not involve the environment building, packet capture analysis and algorithm call. Here I share some of the most cutting-edge, practical and efficient tools in all directions to help you become more efficient and do more with less. All of the following tools are fully featured in the MobileCTF engagement and you are welcome to try your hand at the upgrade: https://github.com/r0ysue/MobileCTF/
 
-### 渗透测试武器库环境搭建
+### Environmental Construction of Penetration Test Weapon Depot
 
-逆向与正向不同，逆向没有官方的质保，一切都靠摸索与尝试。一套好的逆向环境就已经成功了一半，有时候还需要不断的切换环境，不同的环境都会有不同的报错和不同的结果。
+Converse is different from forward. Converse has no official guarantee. Everything depends on fumbling and trying. A good set of reverse environment has been half successful, sometimes also need to constantly switch environment, different environment will have different error reporting and different results.
 
-分享一下我的环境：
+Share my environment:
 
-机型：Pixel 1代 sailfish；选择理由：谷歌亲儿子，可刷官方原版安卓7-10，刷Fart8终极版脱壳机，运行Frida12-14版本老代码一把梭，基于Frida的脱壳机dexdump，抓包工具r0capture，追踪器r0tracer，稳定高效bug少。
+Models: Pixel 1G sailfish; Reasons for choice: Google Pro Son, swipe the official original Android 7-10, swipe the Fart8 Ultimate Shell, run the Frida12-14 version of the old code as a shuttle, Frida-based shell remover dexdump, grab tool r0capture, tracker r0tracer, stable and efficient with few bugs.
 
-机型：一加7pro；选择理由：国行手机双卡双待，刷好安卓10搭配Kali Nethunter移动渗透工具箱，解锁内核全功能，内置Wireshark网卡抓包、从内核对文件/网络/系统调用进行监控 详细文章：https://mp.weixin.qq.com/s/PIiGZKW6oQnOAwlCqvcU0g。
+Model: OnePlus 7pro; Reason for selection: CBC mobile phone dual-card dual-standby, brush Android 10 with Kali Nethunter mobile penetration toolbox, unlock the full functionality of the kernel, built-in Wireshark network card to capture packets, from the kernel file / network / system calls for monitoring detailed article: https://mp.weixin.qq.com/s/PIiGZKW6oQnOAwlCqvcU0g.
 
-机型：Pixel 6代；选择理由：谷歌亲儿子，安卓12-13，运行最新Frida16，主打全功能eBPF从上帝视角俯视App的所有行为，分析绕过root/frida反调试事半功倍。更强的性能，扛得住批量trace，一键hook成千上万个类与方法，暴力定位收发包函数、参数的生成位置，从抓包到算法一条龙
+Models: Pixel 6G; Why: Google Sons, Android 12-13, running the latest Frida16, featuring the full-featured eBPF God-sees all the App's behavior, and analyzes how to get around the root/frida counter-debugging with less effort. Stronger performance, can withstand the bulk of trace, one-button hook thousands of classes and methods, brute-force positioning packet function, parameter generation location, from the packet capture to the algorithm a dragon
 
-机型：云手机：rock5b或orangepi；选择理由：NVMe SSD硬盘，GPU加速，运行安卓流畅不卡顿，速度有保障，一套板卡虚拟出十台手机，免去了电池鼓包网络抖动卡顿的烦恼。预装好frida/lsposed发货，主要场景是免分析还原算法而进行黑盒算法调用，直接跑发包所需的签名算法或加解密算法，并且可以做成HTTP接口供团队成员使用
+Models: Cloud Phone: rock5b or orangepi; Reasons for choice: NVMe SSD hard drive, GPU acceleration, smooth and unstuck Android, guaranteed speed, 10 phones virtually out of one board without the hassle of battery-packed network jitters. Pre-installed frida/lsposed shipping, the main scene is analysis-free restore algorithm and black-box algorithm call, directly run the required signature algorithm or encryption and decryption algorithm, and can be made into a HTTP interface for team members to use
 
-机型：iPhone X；选择理由：iOS低版本14和高版本16各一台，分别跑Frida14与Frida16，分别使用checkra1n与palera1越狱，iOS的App分析没有各种企业壳与反调试，简单许多，难度主要在ObjC语言上。语言可以通过学习掌握，企业壳和反调试真不是人能过的。笔者现在以分析移动端的iOS版本为主，速度快、效率高
+Models: iPhone X; Reasons for selection: iOS One for Low 14 and One for High 16 running Frida14 and Frida16 respectively, using checkra1n and palera1 respectively to escape, iOS's App analysis has no variety of enterprise shells and anti-debugging, much simpler and more difficult mainly on the ObjC language. Language can be mastered by learning, and business shells and anti-debugging are not human. The author is now to analyze the mobile version of iOS-based, fast, efficient
 
-其他软硬件还有收费版脱壳机脱企业壳Fart12，集成好多版本Frida/r0cap/r0tracer、IDA/charles/jadx/jeb动静态调试环境的开箱即用的r0env，具体介绍及获取地址看这里：https://github.com/r0ysue/AndroidSecurityStudy
+Other hardware and software are a charging version of the shell removal machine Fart12, integrated with many versions of Frida/r0cap/r0tracer, IDA/charles/jadx/jeb dynamic and static debugging environment out of the box for r0env, specific introduction and access to address here: https://github.com/r0ysue/AndroidSecurityStudy
 
-### 抓包环境：一个都少不了！
+###Catch environment: Not one less!
 
-包都抓不到，逆向分析无从谈起。
+I can't get a bag. Reverse analysis is impossible.
 
-更不要小看抓包，小小的抓包，可以深入到系统底层、内核，上帝视角抓APP所有流量包；也可以从应用层进行防护，手段那是千变万化，你从内核抓也无济于事，只能从应用层解！
+Not to mention small grab, small grab, can go deep into the system floor, the kernel, God perspective grab all APP traffic packets; can also be protected from the application layer, the means is ever-changing, you grab from the kernel is not helpful, can only understand from the application layer!
 
-绝大部分应用标配的是HTTP/SSL默认的防护手段，也就是客户端校验服务器证书，只需要配置Postern/Charles的VPN抓包即可抓取，具体可以看我的最新视频：https://www.bilibili.com/video/BV1M8411Z7rC ，支持到安卓13和KernerlSU，向下到安卓7、8都是通用的。在iOS上的搭配是shadowrocket + Charles，配置方法见：https://t.zsxq.com/11lQkInqh
+Most of the applications are standard with the default HTTP/SSL protection means, that is, the client verify server certificate, only need to configure Postern/Charles VPN packet capture can be retrieved, specific can see my latest video:https://www.bilibili.com/video/BV1M8411Z7rC, support to Android 13 and KernerlSU, down to Android 7, 8 are generic. On iOS, shadowrocket + Charles, configured at https://t.zsxq.com/11lQkInqh
 
-HTTP/SSL还有一种防护模式，类似于以前的银行U盾，也就是服务器校验客户端证书，Charles典型的报错是：400 No required SSL certificate was sent，需要使用r0capture从APP中导出客户端证书，导入到charles中去，这样服务器才认可来自charles的连接，具体方法和流程我的MobileCTF项目中有案例，从判定到解决方法和操作流程都有。使用这种防护技术的已经非常少了。
+HTTP/SSL also has a kind of defending mode, similar to the former bank U shield, that is, the server checks the client certificate, Charles typical error report is: 400 No required SSL certificate was sent, need to use r0capture to export the client certificate from the APP, import into charles, so that the server will recognize the connection from charles, concrete method and process I have a case in MobileCTF project, from judgment to resolution and operation process. The use of this kind of protection technology has been very rare.
 
-更多是用的框架提供的SSL pinning功能，在APP代码里对收到的服务器证书算哈希，与一个特定值做比对，不对则断开连接，Charles典型的报错是：Client closed the connection before a request was made. Possibly the SSL certificate was rejected. 此时需要用frida去hook框架的代码，置空其SSL pinning逻辑使其返回通过，如果框架没有混淆，笔者用的是通用方案：https://github.com/WooyunDota/DroidSSLUnpinning ；如果框架被混淆成a.b.c.d了，那么只能r0tracer批量hook文件打开函数或者摘要函数，调用栈里找线索，找到pinner函数hook置空即可绕过，MobileCTF项目中也有相关案例。
+More is the use of the framework provided by the SSL pinning function, in the APP code on the received server certificate hash, and a specific value to be compared, if not, then disconnect, Charles typical error reporting is: Client closed the connection before a request was made. Possibly the SSL certificate was rejected. Now the need to use frida to hook framework code, null its SSL pinning logic to return through, if the framework is not confused, the author used a common scheme: https://github.com/WooyunDota/DroidSSLUnpinning, if the framework is confused with a.b.c.d, then only the r0tracer bulk hook file open function or summary function, call stack for clues, find the pinner function hook null can be bypassed, MobileCTF project also has a related case.
 
-以上所有收发包的模式，使用的是系统原生自带的网络通信库，因此可以直接从系统本身出发导出收发包流量，比如r0capture、eCapture就可以实现SSL库的SSL_write和SSL_read收发包导出，忽略所有协议、框架、证书绑定、加固等等应用层的各种复杂变量；r0capture结合了Wireshark可以有更好和直观地展示流量，还提供了栈回溯、客户端证书导出等功能，辅助定位收发包及算法位置，功能更为强大。
+All the above modes of sending and receiving packets use the network communication library which is native to the system, so it can directly export the sending and receiving packet flow from the system itself, such as r0capture, eCapture can realize the SSL_write and SSL_read sending and receiving packet export of the SSL library, ignoring all the protocols, framework, certificate binding, reinforcement and other complex variables of the application layer; r0capture combined with Wireshark can have a better and intuitive display of traffic, and also provides the functions of heap backtracking, client certificate export and other functions, auxiliary positioning of sending and receiving packets and algorithm location, more powerful.
 
-有些开发能力极强的厂商，已经不屑于使用系统自带的网络库，比如浏览器、小程序、游戏、跨平台超级应用如抖音等，一般都会有自己的网络通信SDK，这种一般情况下，Postern+Charles的VPN抓包是可以解决的，如小程序等。如果加了额外的防护，比如SSL pinning，就需要分析通信库框架本身的SSL pinning是如何实现的，比如抖音的通信库证书绑定的实现细节分析：https://bbs.kanxue.com/thread-277996.htm ，然后hook特定函数来绕过，这种情况也是最难的，考验综合逆向能力，https://t.zsxq.com/11U2cH4vi，https://t.zsxq.com/11Pfh1PyU。
+Some manufacturers with strong development ability have already been dismissive of using the system's own network library, such as browsers, small programs, games, cross-platform super applications such as Douyin, etc., generally will have their own network communication SDK, in this general case, Postern+Charles VPN packet capture can be solved, such as small programs. If you add additional protection, such as SSL pinning, you need to analyze how the communication library framework itself SSL pinning is implemented, such as Douyin communication library certificate binding implementation details analysis: https://bbs.kanxue.com/thread-277996.htm, then hook specific function to bypass, this situation is the hardest, test the comprehensive converse ability, https://t.zsxq.com/11U2cH4vi, https://t.zsxq.com/11Pfh1PyU.
 
-当然还有些银行会使用自己特殊的金融通道，从证书体系到传输体系都是独立开发的，与标准都不一样，那么此时所有的基于标准HTTPS建立的抓包方式都会失效，这也是业界最强的防护，得完全从零开始逆他们开发的这个通道。还有应用会使用特殊的二进制序列化网络库，比如protobuf、HTTP2，比如：https://bbs.kanxue.com/thread-262207.htm ，这些都要对通信库有非常深入的理解和功底，也就是说需要综合逆向，才能明白抓到的包是什么，后续如何利用。
+Of course, some banks will use their own special financial channel, from the certificate system to the transmission system is developed independently, and standards are not the same, then all the standard HTTPS based on packet capture will fail, this is the industry's strongest protection, have to completely reverse the channel they developed from scratch. There are also applications that use special binary serialized network libraries, such as protobuf, HTTP2, such as: https://bbs.kanxue.com/thread-262207.htm, all of which have a very deep understanding of the communication library, that is to say, the need for a comprehensive reverse to understand what the packet is, and how to use it.
 
-小小的抓包，深究起来，深不见底，核心的思路还是见招拆招，通过逆向研究APP是怎么搭起来的，顺着开发的思路去拆。越是通用的大家研究的多的东西，拆起来越容易；越是专用系统大家研究越少的东西，拆起来越难。
+The key idea is to do some reverse research on how to build the APP, and then do some reverse research on how to build the APP. The more generic things that people study, the easier it is to dismantle; the more specialized systems that people study, the less hard it is to dismantle.
 
-### 算法还原与黑盒调用
+### Algorithm Restore and Black Box Call
 
-安卓APP的话首先得脱壳，壳都脱不了，静态分析无从谈起。iOS的话是砸壳。
+Android APPs have to be shelved first, and neither can be shelved, and static analysis is impossible. IOS is crashing.
 
-iOS砸壳没有难度，frida-ios-dump秒砸，百试百灵；如果遇到frida反调试就用CrackerXI+，也大多数可以成功。安卓脱壳的话，讲究就可太多了，一二三代壳，每种脱法都不同，还有各种强混淆和反调试，特别恶心人。这里介绍几个常用的，一般免费壳用fart8终极版、frida-dexdump、frida_fart即可秒脱；二代函数抽取壳用youpk(现在已经被大多数企业壳anti)，fart12收费版即可。三代壳dexvmp、dex2c这些只能靠jnitrace来分析Java层逻辑，然后手动还原算法，没有全自动的方案。
+iOS is easy to smash shell, frida-ios-dump smashed, Hundred Try Bailing, and if you encounter frida anti-debugging, use CrackerXI+, most of them can succeed. There's so much to be said for Android to be unhulled, one or two or three generations of hulls, each of which is different, and all kinds of obfuscations and debugs, especially disgusting. This paper introduces some common free shells, which can be separated in seconds by fart8 Ultimate, frida-dexdump, frida_fart, and the second generation function extraction shell by youpk (now used by most enterprise shell anti), which can be charged by fart12. Three generation shell dexvmp, dex2c, these can only rely on jnitrace to analyze the Java layer logic, and then manually restore the algorithm, there is no fully automatic program.
 
-脱壳后紧接的问题是定位算法位置，位于哪个包、哪个类的哪个方法，是收发包里的那个最终的加解密函数或者生成签名的位置。我比较喜欢简单粗暴，可以从最极限的场景出发，进行全量hook。使用r0tracer可以直接hook包下所有的函数，一键hook整个包下所有的类方法重载，输出参数、调用栈和返回值，输出一份日志，在日志中直接搜抓包里的那串数值，即可定位到哪个函数生成了那串数值，调用栈保存了完整的调用逻辑，根据调用栈去追脱壳出来的源码进行阅读，判断确认参数是计算转化拼接生成的。当然全量hook只是理想情况，大部分情况只能根据关键字批量hook几百几千个方法，机器才扛得住。PS：兼容安卓的Java层和iOS的ObjC层，不可用于安卓的C(++)层或iOS的C与Swift层。
+The immediate problem after the discarding is the location of the algorithm, which package, which class method is located, which is the final encryption and decryption function in the transceiver package or the location of the signature generation. I prefer to be simple and rude, and start with the most extreme scenes, full hook. Using r0tracer can directly hook all the functions under the package, one key hook all the class methods under the package overload, output parameters, call stack and return value, output a log, in the log directly search the string of values in the package, you can locate which function generated the string of values, call stack to save the complete call logic, according to the call stack to chase off the shell out of the source code to read, determine that the confirmation parameters are generated by the calculation of conversion splicing. Of course, full-scale hook is only ideal, most cases can only be based on the keyword batch hook hundreds of thousands of methods, the machine is able to withstand. PS: The Android-compatible Java layer and the iOS ObjC layer are not available for the Android C(++) layer or the iOS C and Swift layers.
 
-如果故事到这里就结束了，那么你算是幸运的boy，因为2023年了，稍微注重一丝丝安全性的APP，都会把核心逻辑也就是算法用C写到Native层，这样批量hook就实现不了了；而且也不会用标准的算法，这样很容易被其他语言重写算法做成脱机，比如python/go重写万物，尽量自己手写一个算法；如果非用标准的那么尽可能对标准算法稍微修魔改，比如md5算法改个码表，对称加解密改个S盒或者初始化算法的加减号，提高逆向难度；加个强混淆如ollvm、armvmp，把逆向的难度提高到地狱级别，这样你的算法几乎没有被还原的可能，这时候想要调用算法，只剩下模拟执行工具如frida/xposed的rpc、云手机或者unidbg。当然一般为了APP的运行效率和执行速度，会把混淆强度开低一些，这样任然有概率被手工逆向还原出来，熊掌与鱼不可兼得。
+If the story ends here, then you're lucky boy, because in 2023, APPs that pay a little bit of attention to security will write the core logic, the algorithm, in C to the Native layer, so that batch hook will not be able to achieve, and they won't use standard algorithms, so it's easy to be taken offline by other language rewriting algorithms, like python/go rewriting everything and trying to write an algorithm by yourself, and if not standard then try to slightly modify the standard algorithm, like md5 changing the codetable, Symmetric encryption and decryption to change the S-box or initialization algorithm plus or minus sign, improve the difficulty of the reverse, add strong confusion such as ollvm, armvmp, the difficulty of the reverse to hell level, so that your algorithm almost can not be restored, at this time you want to call the algorithm, only to simulate the execution tools such as frida/xposed rpc, cloud phone or unidbg. Of course, in general, for the APP running efficiency and execution speed, will be a little lower confusion intensity, so that there is a chance of manual reverse restore, bear palm and fish can not have both.
 
-混淆到面目全非的逻辑，实在还原不出来算法的话，只能进行黑盒调用。xposed/lsposed和frida都是内存注入工具，都可以主动调用APP的算法并返回结果，也都可以做成HTTP接口供团队成员调用，区别是*posed只能工作于Java层，frida是Java/C层均可以。云手机则是天生适合主动调用，没有屏幕、没有电池、有线网络，硬件也更加稳定可靠，还可以多开甚至改机，主动调用暴露接口的话用真机不大合适。Unidbg是一款在x86硬件上跑ARM架构SO的模拟器，它主要提供各种精简的安卓库环境包括CPU、文件、JNI、进程、网络等等，让SO误以为自己运行在安卓手机上，此时再对其中的算法进行调用，其只能模拟执行C函数，且Unidbg可以结合SpringBoot跑在x86的服务器上进行批量部署：https://github.com/cxapython/unidbg-server ，难点是补环境费事费脑并不简单。
+If we can't get the algorithm back, we can only make black-box call. xposed/lsposed and frida are both memory injection tools, you can actively call the APP algorithm and return the results, you can also make a HTTP interface for team members to call, the difference is *posed can only work in the Java layer, frida is Java/C layer can. Cloud mobile phone is inherently suitable for active call, no screen, no battery, wired network, hardware is more stable and reliable, you can open more or even change the machine, active call exposed to the interface of real machine is not suitable. Unidbg is a simulator running on x86 hardware ARM architecture SO, it mainly provides a variety of streamlined Android library environment, including CPU, files, JNI, processes, networks, and so on, let SO mistakenly think that they are running on the Android phone, then call the algorithm in it at this time, it can only simulate the implementation of C function, and Unidbg can run on x86 server with SpringBoot for batch deployment:https://github.com/cxapython/unidbg-server, the difficulty is that the environment is laborious.
 
-## 总结
+## Summary
 
-对抗永无止境，一款框架的流行，就会意味着反制迟早会出现，之前用frida去批量trace有多快有多猛有多爽，现在frida反调试就有多流行。同理，想要实现最强的加固，那就意味着更强的手动编码能力，自己写独一份的SO动态加载、hook框架、OLLVM pass、反F5花指令、白盒秘钥、加解密哈希算法等等，原创度越高，逆向分析破解难度越大。
+The perpetual rivalry means that the backlash will come sooner or later, as the frida used to bulk up trace how fast and furious it was, and now the frida counter-debugging is as popular. Similarly, if you want to achieve the strongest reinforcement, it means a stronger manual coding ability, write your own unique SO dynamic load, hook framework, OLLVM pass, anti-F5 flower instructions, white-box key, encryption and decryption hash algorithm, etc., the higher the originality, the greater the difficulty of reverse analysis.
 
-各种权限和资源的判断校验上务必放在服务器端，客户端只做MVC模型中的视图端呈现给用户，坚持客户端零信任原则，部署设备指纹和服务器风控策略，基于这些原则打造的APP，哪怕客户端毫无防护也无所谓，那个“账号”才是核心，比如大部分的海外APP，还有国内的微信、抖音等，都是这样的操作。
-
-对于HW中移动客户端的分析，常见的环境、抓包、算法的分析方式和工具武器就是上述这些，使用场景及限制条件都进行了言简意赅的介绍，最后祝大家百步穿杨、钢板日穿！
+All kinds of authority and resources must be checked on the server side, the client only do the MVC model of the view side presented to the user, adhere to the client zero trust principle, deployment of equipment fingerprint and server risk control strategy, based on these principles of the APP, even if the client without any protection

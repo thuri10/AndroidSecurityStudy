@@ -1,174 +1,174 @@
-## FRIDA脚本系列（二）成长篇：动静态结合逆向WhatsApp
+## FRIDA Script Series (2) Growth Chapter: Dynamic-Static Combination Reverse WhatsApp
 
-在[FRIDA脚本系列（一）入门篇：在安卓8.1上dump蓝牙接口和实例](https://github.com/r0ysue/AndroidSecurityStudy)中，我们学到了枚举模块中所有的类、子类及其方法，以及找到其所有重载，最终还通过蓝牙接口来小小的实战了一下。这一篇我们倒着来，从`hook`所有重载开始，写一个可以动态观察所有模块、类、方法等接口数据的工具出来。
+In the [FRIDA Script Series(i) Getting Started: dump Bluetooth Interfaces and Instances on Android 8.1](https://github.com/r0ysue/AndroidSecurityStudy), we learned to enumerate all classes, subclasses, and methods in the module, find all its overloads, and finally, do a little battle over the Bluetooth interface. In this paper, we reverse, starting from 'hook' all overloads, write a tool that can dynamically observe all the modules, classes, methods and other interface data out.
 
-### 0x01.hook方法的所有重载
+### All overloads of the 0x01.hook method
 
-在[一篇文章带你领悟Frida的精髓（基于安卓8.1）](https://github.com/r0ysue/AndroidSecurityStudy)一文中，我们已经学会了对放的重载进行处理的方法，我们先回顾一下代码：
+In the article [An article takes you through the essence of Frida (based on Android 8.1)](https://github.com/r0ysue/AndroidSecurityStudy), we've learned how to handle the reload of the playback, and let's review the code:
 
 ```js
 my_class.fun.overload("int" , "int").implementation = function(x,y){
 my_class.fun.overload("java.lang.String").implementation = function(x){
 ```
 
-也就是说我们需要构造一个重载的数组，并把每一个重载都打印出来。我们直接上代码：
+That means we need to construct an array of overloads and print out every overload. Let's go straight to the code:
 
 
 ```js
 
-//目标类
+// Target class
 var hook = Java.use(targetClass);
-//重载次数
+// Number of overloads
 var overloadCount = hook[targetMethod].overloads.length;
-//打印日志：追踪的方法有多少个重载
+// Print Log: How many overloads are tracked
 console.log("Tracing " + targetClassMethod + " [" + overloadCount + " overload(s)]");
-//每个重载都进入一次
-for (var i = 0; i < overloadCount; i++) {
-//hook每一个重载
-	hook[targetMethod].overloads[i].implementation = function() {
-		console.warn("\n*** entered " + targetClassMethod);
+// Enter once for each overload
+for(var i = 0; i < overloadCount; i++){
+//hook Each overload
+hook[targetMethod].overloads[i].implementation = function(){
+console.warn("\n*** entered " + targetClassMethod);
 
-		//可以打印每个重载的调用栈，对调试有巨大的帮助，当然，信息也很多，尽量不要打印，除非分析陷入僵局
-		Java.perform(function() {
-		     var bt = Java.use("android.util.Log").getStackTraceString(Java.use("java.lang.Exception").$new());
-		        console.log("\nBacktrace:\n" + bt);
-		});   
+// Can print each overloaded call stack, which is very helpful for debugging, and of course, there is a lot of information, try not to print unless the analysis is deadlocked
+Java.perform(function(){
+var bt = Java.use("android.util.Log").getStackTraceString(Java.use("java.lang.Exception").$new());
+console.log("\nBacktrace:\n" + bt);
+});
 
-		// 打印参数
-		if (arguments.length) console.log();
-		for (var j = 0; j < arguments.length; j++) {
-			console.log("arg[" + j + "]: " + arguments[j]);
-		}
+// Print parameters
+if(arguments.length)console.log();
+for(var j = 0; j < arguments.length; j++){
+console.log("arg[" + j + "]: " + arguments[j]);
+}
 
-		//打印返回值
-		var retval = this[targetMethod].apply(this, arguments); // rare crash (Frida bug?)
-		console.log("\nretval: " + retval);
-		console.warn("\n*** exiting " + targetClassMethod);
-		return retval;
-	}
+// print return value
+var retval = this[targetMethod].apply(this, arguments); // rare crash(Frida bug?)
+console.log("\nretval: " + retval);
+console.warn("\n*** exiting " + targetClassMethod);
+return retval;
+}
 }
 ```
 
-这样我们对于方法的所有重载就处理好了，接下来是枚举所有方法。
+So we handle all the overloads of the methods, and then we enumerate all the methods.
 
-### 0x02.hook类的所有方法
+### All methods of the 0x02.hook class
 
-还是直接上代码：
+Direct code:
 
 ```js
 function traceClass(targetClass)
 {
-  //Java.use是新建一个对象哈，大家还记得么？
-	var hook = Java.use(targetClass);
-  //利用反射的方式，拿到当前类的所有方法
-	var methods = hook.class.getDeclaredMethods();
-  //建完对象之后记得将对象释放掉哈
-	hook.$dispose;
-  //将方法名保存到数组中
-	var parsedMethods = [];
-	methods.forEach(function(method) {
-		parsedMethods.push(method.toString().replace(targetClass + ".", "TOKEN").match(/\sTOKEN(.*)\(/)[1]);
-	});
-  //去掉一些重复的值
-	var targets = uniqBy(parsedMethods, JSON.stringify);
-  //对数组中所有的方法进行hook，traceMethod也就是第一小节的内容
-	targets.forEach(function(targetMethod) {
-		traceMethod(targetClass + "." + targetMethod);
-	});
+    //Java.use is a new subject, remember?
+    var hook = Java.use(targetClass);
+    // Use reflection to get all the methods of the current class
+    var methods = hook.class.getDeclaredMethods();
+    // Remember to release objects after they are built
+    hook.$dispose;
+    // Save method name to array
+    var parsedMethods = [];
+    methods.forEach(function(method){
+        parsedMethods.push(method.toString().replace(targetClass + ".", "TOKEN").match(/\sTOKEN(.*)\(/)[1]);
+    });
+    // Remove some duplicate values
+    var targets = uniqBy(parsedMethods, JSON.stringify);
+        // hook all methods in the logarithm group, traceMethod is the first section
+        targets.forEach(function(targetMethod){
+        traceMethod(targetClass + "." + targetMethod);
+    });
 }
 ```
 
-### 0x03.hook类的所有子类
+### All subclasses of the 0x03.hook class
 
-还是上核心部分的代码：
+Or code from the top core:
 
 ```js
-//枚举所有已经加载的类
+// Enumerate all loaded classes
 Java.enumerateLoadedClasses({
-	onMatch: function(aClass) {
-		//迭代和判断
-		if (aClass.match(pattern)) {
-			//做一些更多的判断，适配更多的pattern
-			var className = aClass.match(/[L]?(.*);?/)[1].replace(/\//g, ".");
-			//进入到traceClass里去
-			traceClass(className);
-		}
-	},
-	onComplete: function() {}
+    onMatch: function(aClass){
+    // Iteration and Judgment
+    if(aClass.match(pattern)){
+        // Make more judgments and adapt to more pattern
+        var className = aClass.match(/[L]? (.*);?/)[1].replace(/\//g, ".");
+        // Go inside the traceClass
+        traceClass(className);
+    }
+    },
+    onComplete: function(){}
 });
 ```
 
-### 0x04.hook本地库的导出函数
+### Export function for 0x04.hook local library
 
 ```js
-// 追踪本地库函数
+// Track local library functions
 function traceModule(impl, name)
 {
-	console.log("Tracing " + name);
-	//frida的Interceptor
-	Interceptor.attach(impl, {
-		onEnter: function(args) {
+    console.log("Tracing " + name);
+    //frida's Interceptor
+    Interceptor.attach(impl, {
+    onEnter: function(args){
 
-		console.warn("\n*** entered " + name);
-		//打印调用栈
-		console.log("\nBacktrace:\n" + Thread.backtrace(this.context, Backtracer.ACCURATE)
-						.map(DebugSymbol.fromAddress).join("\n"));
-		},
-		onLeave: function(retval) {
-		//打印返回值
-		console.log("\nretval: " + retval);
-		console.warn("\n*** exiting " + name);
+    console.warn("\n*** entered " + name);
+    // Print call stack
+    console.log("\nBacktrace:\n" + Thread.backtrace(this.context, Backtracer.ACCURATE)
+    .map(DebugSymbol.fromAddress).join("\n"));
+    },
+    onLeave: function(retval){
+    // print return value
+    console.log("\nretval: " + retval);
+    console.warn("\n*** exiting " + name);
 
-		}
-	});
+    }
+    });
 }
 ```
 
-### 0x05.动静态结合逆向WhatsApp
+### 0x05. Dynamic and static combined inverse WhatsApp
 
-终于到了实战的时候，把以上代码拼接起来，形成一个脚本，其实这个脚本[awesome-frida
-](https://github.com/dweinstein/awesome-frida)里面也有介绍，代码在[这里](https://github.com/0xdea/frida-scripts/blob/master/raptor_frida_android_trace.js)，就是有点小bug，经[葫芦娃](https://github.com/hookmaster/frida-all-in-one)修改好之后，终于可以用了。
+Finally, when it's time for real combat, splice the code together to form a script, which is actually awesome-frida.
+https://github.com/dweinstein/awesome-frida The code is [here](https://github.com/0xdea/frida-scripts/blob/master/raptor_frida_android_trace.js), just a little bug. After [gourd-doll](https://github.com/hookmaster/frida-all-in-one) has been modified, it is finally ready to use.
 
-我们来试下它的几个主要的功能，首先是本地库的导出函数。
+Let's try several of its main functions, first of all, the local library export function.
 
 ```js
 
-setTimeout(function() {
-	Java.perform(function() {
-		trace("exports:*!open*");
-		//trace("exports:*!write*");
-		//trace("exports:*!malloc*");
-		//trace("exports:*!free*");
-	});
+setTimeout(function(){
+Java.perform(function(){
+trace("exports:*!open*");
+//trace("exports:*!write*");
+//trace("exports:*!malloc*");
+//trace("exports:*!free*");
+});
 }, 0);
 ```
 
-我们`hook`的是`open()`函数，跑起来看下效果：
+We 'hook' is the 'open()' function and run to see the effect:
 
-```
-$ frida -U -f com.whatsapp -l raptor_frida_android_trace_fixed.js --no-pause
+```bash
+$ frida -U -f com.whatsapp -l raptor_frida_android_trace_fixed.js —no-pause
 ```
 
 ![](pic/01.png)
 
-如图所示`*!open*`根据正则匹配到了`openlog`、`open64`等导出函数，并hook了所有这些函数，打印出了其参数以及返回值。
+As shown in the figure, '*!open*' matches the derived functions 'openlog', 'open64', and so on according to the regularization, and hook all of them, printing out their parameters and their return values.
 
-接下来想要看哪个部分，只要扔到[`jadx`](https://github.com/skylot/jadx)里，静态“分析”一番，自己随便翻翻，或者根据字符串搜一搜。
+Next you want to see which part, just throw it in ['jadx'](https://github.com/skylot/jadx), "analyze" it statically, flip it yourself, or search it based on a string.
 
 ![](pic/03.png)
 
-比如说我们想要看上图中的`com.whatsapp.app.protocol`包里的内容，就可以设置`trace("com.whatsapp.app.protocol")`。
+For example, if we want to look at the contents of the 'com.whatsapp.app.protocol' package in the figure above, we can set the 'trace("com.whatsapp.app.protocol")'.
 
 ![](pic/04.png)
 
 ![](pic/05.png)
 
-可以看到包内的函数、方法、包括重载、参数以及返回值全都打印了出来。这就是`frida`脚本的魅力。
+You can see that the functions, methods, including overloads, parameters, and return values within the package are all printed. This is the charm of the 'frida' script.
 
-当然，脚本终归只是一个工具，你对`Java`、安卓App的理解，和你的创意才是至关重要的。
+Of course, scripts are ultimately just a tool, and your understanding of 'Java', Android apps, and your ideas are all that matters.
 
-接下来可以搭配[Xposed module](https://repo.xposed.info/module-overview)看看别人都给`whatsapp`做了哪些模块，`hook`的哪些函数，实现了哪些功能，学习自己写一写。
+Next, you can go with [Xposed module](https://repo.xposed.info/module-overview) to see what modules have been made for 'whatsapp', what functions of 'hook', what functions have been implemented, and learn to write by yourself.
 
 ![](pic/06.png)
 
-当然，再强调一句，做外挂是违法行为，千万不要制作和分发任何App的外挂，否则等待你的只会是法律的制裁。
+Of course, it's illegal to make a plug-in, and don't make and distribute any app's plug-ins, because you'll only be punished by law.

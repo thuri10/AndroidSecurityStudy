@@ -1,20 +1,20 @@
 [toc]
 
-# Pixel1代平替：一加3手机刷入KaliNethunter解封完整Linux命令环境
+# Pixel1 Replacement: OnePlus 3 phones swipe into KaliNethunter to unpack full Linux command environment
 
-# 意义
+# Meaning
 
-大家知道在Linux上，我们想要对数据封包进行统计、定位、可视化、分析和转储等，有一系列的工具和软件。这些工具为我们进行网络数据封包的分析和处理提供了无与伦比的支持，可以说有这些工具的存在，没有抓不到的包，如果再结合hook技术，可以说没有解不开的协议。
+As you know, on the Linux, we want to do statistics, positioning, visualization, analysis and dump of data packets, there is a series of tools and software. These tools for our network data packet analysis and processing provides unparalleled support, we can say that there are these tools, there is no packet can not be caught, if combined with hook technology, there is no protocol that can not be unlocked.
 
-工具虽好，但是它们的运行都需要一个完整的Linux环境，比如像jnettop/htop/nethogs等需要root权限，像iwlist/aircrack/HID等需要内核驱动支持、监听模式的打开等，Wireshark/Charles/BP会需要桌面环境的支持，在GUI中进行可视化分析。
+Although the tool is good, but they need a complete Linux environment to run, such as jnettop/htop/nethogs and so on need root authority, such as iwlist/aircrack/HID and so on need kernel driver support, monitoring mode open, Wireshark/Charles/BP will need the support of desktop environment, visual analysis in the GUI.
 
-具体的内容在这篇文章中进行了详细的解释：[《来自高纬的对抗：替换安卓内核并解封Linux命令和环境》](https://mp.weixin.qq.com/s/PIiGZKW6oQnOAwlCqvcU0g)
+The details are explained in detail in this article: ["Confrontation from High Altitude: Replacing the Android Kernel and Unsealing Linux Commands and Environments"](https://mp.weixin.qq.com/s/PIiGZKW6oQnOAwlCqvcU0g)
 
-随着时间的推移，Nexus设备逐渐退出历史舞台，而Kali Nethunter却迟迟不能支持到Pixel设备；此时我们只能退而求其次，选择一加手机，来延续手机上刷入Kali Nethunter解封完整Linux环境的传统。
+Over time, the Nexus device gradually dropped out of the historical scene, while the Kali Nethunter was slow to support the Pixel device; now we have to settle for the next best option, to continue the tradition of swiping the phone with Kali Nethunter to unseal the entire Linux environment.
 
-本篇基于一加3(t)手机，在性能上相当于Pixel一代手机。运行环境是安卓10。本文中用到的附件等位于百度盘中：链接：https://pan.baidu.com/s/1c01pB6JIY6a-25P-855dAA 提取码：e2gn 
+Based on the OnePlus 3(t) phone, this one is the performance equivalent of the Pixel generation. The operating environment is Android 10. The accessories used in this paper are located in Baidu Disk:Link:https://pan.baidu.com/s/1c01pB6JIY6a-25P-855dAAExtraction code:e2gn
 
-该系列为学员优秀作品系列，附件apk、代码等位于我的项目中，大家可以自取：
+This series is a good series of works for the students. The accessories, apk, code and so on, are in my project. You can choose from:
 
 [https://github.com/r0ysue/AndroidSecurityStudy](20230403https://github.com/r0ysue/AndroidSecurityStudy)
 
@@ -22,113 +22,135 @@
 
 # Intro
 
-1. 为什么要搭建nethunter的环境
-  + 工欲善其事,必先利其器.nethunter强大的工具支持,使得工作变得轻松
-2. 为什么使用oneplus3T
-  + oneplus3T这部机型,lineage,nethunter,twrp都有很好的支持
-  + oneplus3T现在的价格很低
-  + oneplus3T性能还不错,比nexus 5x的性能强悍很多
-3. 为什么写这个刷机文章
-   不仅仅是因为这个nethunter的强大和oneplus3t的性价比,更因为是刷机总是出现这样那样的问题,导致失败.经过反复几天测试,得出了一种比较轻松的方式.后面提供了这个刷机过程中用到的所有的工具包
-# 刷机前设置
-需要开启开发者模式,bootloader解锁,usb调试
-如果手机满足这些条件,可以直接进入刷入lineage
-## 开启开发者模式
-系统版本号(点击多次),一般进入方式都是手机里面,设置->关于手机->版本号
+1. Why nethunter environments
++ You need to get ahead of your work when you're ready. With nethunter's powerful tools, work is easy
+2. Why oneplus3T
++ oneplus3T This model, lineage, nethunter, twrp, is well supported
++ oneplus3T is now very cheap
++ oneplus3T performance is good, much better than the nexus 5x
+3. Why write this brush article
+Not only because of the power of the nethunter and oneplus3t price performance, but also because the brush always has such a problem, leading to failure. After several days of testing, a more relaxed approach was found. All toolkits used during this swipe are provided later
+
+# Pre-Press Set-up
+Developer mode needs to be turned on, bootloader unlock, usb debug
+If the phone meets these conditions, it can go straight into the lineage
+
+## Turn on developer mode
+The system version number (clicked multiple times), the general way to access is inside the phone, set->about the phone->version number
 ![1](202304061.jpg)
 ![2](202304062.jpg)
-## 开启usb调试和oem解锁许可
-+ 设置->系统->开发者选项
+
+## Turn on usb debug and oem unlock licenses
++ Settings->System->Developer Options
 ![3](202304063.jpg)
+
 ![4](202304064.jpg)
-## 解锁OEM
-1. 重启到bootloader
-+ 使用adb命令
+## Unlock OEM
+1. Reboot to bootloader
++ Use the adb command
+
+```bash
+adb reboot bootloader
 ```
- adb reboot bootloader  
-```
-+ 手机关机,然后开机键+手机音量下键
++ Turn on the phone, then On + Phone Volume Down
 ![5](202304065.png)
 ![6](202304066.jpg)
-1. 解锁
-```
+
+1. Unlock
+
+```bash
 fastboot oem unlock
 ```
+
 ![7](202304067.png)
 ![8](202304068.jpg)
-手机出现这个界面以后,选择UNLOCK THE BOOTLOADER(音量上下键可以切换选项,电源键做选择)
-等待解锁后自动重启
-注意: 解锁重启之后,完成基本设置之后,再次启动开发者模式和usb调试
-# 刷入lineage
-nethunter官方提供的系统是android10的镜像包,需要输入一个android10的底包,这里选择lineage的系统
-## 刷入twrp
-1. 重启手机,刷入twrp.img
-```
+
+Once the phone has this interface, choose UNLOCK THE BOOTLOADER
+Automatically restart after waiting to unlock
+Note: After unlocking the reboot, start developer mode and usb debugging again after you have completed basic set-up
+# flush lineage
+The system provided by nethunter is the mirror package of android10. We need to input a bottom package of android10. Here we choose the system of lineage
+## Flush twrp
+1. Restart your phone, swipe into twrp.img
+```bash
 adb reboot bootloader
-fastboot flash recovery recovery.img 
+fastboot flash recovery recovery.img
 ```
 ![9](202304069.png)
-1. 手机音量上下键,选择recovrey mode进入twrp的系统
+1. Phone volume up and down, select recovrey mode to enter the twrp system
+
 ![11](2023040611.jpg)
-## 清理数据
-1. 在twrp中,Wipe->Format Data->输入'yes'->成功之后,back到可以选择Advanced Wipe地方
+
+## Clean up data
+1. In twrp, Wipe->Format Data->Enter 'yes'->After success, back to a place where you can select Advanced Wipe
 ![12](2023040612.jpg)
 ![10](2023040610.jpg)
-1. Advanced Wipe->勾选全部
+
+1. Advanced Wipe->Check All
+
 ![15](2023040615.jpg)
 
-## 输入防护墙的包
+## Inbound Wall Bag
+
 1. Advanced->ADB Sideload
 ![17](2023040617.jpg)
-2. 输入命令
-```
-adb sideload oxygenos-9.0.6-bl-km-5.0.8-firmware-3.zip 
+2. Enter commands
+
+```bash
+adb sideload oxygenos-9.0.6-bl-km-5.0.8-firmware-3.zip
 ```
 ![40](2023040640.png)
 ![41](2023040641.jpg)
 
-## 刷入lineage的包
+## Package flushed into lineage
 1. Advanced->ADB Sideload
-2. 输入如下命令
-```
-adb sideload lineage-17.1-20210215-nightly-oneplus3-signed.zip 
+2. Enter the following command
+
+```bash
+adb sideload lineage-17.1-20210215-nightly-oneplus3-signed.zip
 ```
 ![42](2023040642.png)
 ![43](2023040643.jpg)
 
-## 刷入magisk
+## Flush magisk
 1. Advanced->ADB Sideload
-2. 输入下面命令
-```
+2. Enter the following command
+```bash
 adb sideload app-release.zip
 ```
+
 ![44](2023040644.png)
 ![45](2023040645.jpg)
-3. 重启
-4. 开启开发者模式,usb调试
-5. 使用下面命令安装magisk的app
+
+3. Restart
+4. Turn on developer mode, usb debugging
+5. Use the following command to install the magisk app
+"
+```bash
+adb install app-release.apk
 ```
-adb install app-release.apk 
-```
+
 ![46](2023040646.png)
 ![47](2023040647.jpg)
-6. 重启,安装magisk之后,第一次需要重启,让配置生效
+6. Reboot, After installing magisk, reboot is required for configuration to take effect for the first time
 ![48](2023040648.jpg)
-7. magisk如上已经安装成功
+7. magisk has been successfully installed as above
 
-# 使用Magisk刷入nethunter
+# Flush nethunter using Magisk
 
-1. 传入nethunter的包
-```
+1. Package Incoming to nethunter
+
+```bash
 adb push kalihunter.zip /sdcard/Download
 ```
 ![28](2023040628.png)
-2. 选择 模块->本地,选择,nethunter的包,等待结束,重启
+2. Select Module -> Local, Select, Package for nethunter, Wait to Finish, Restart
 ![29](2023040629.jpg)
 
-# nethunter初始化设置
-1. 重启后,连wifi,输入命令,设置时间
-```
+# nethunter initialization settings
+1. After reboot, connect to wifi, enter command, set time
+
+```bash
 settings put global captive_portal_http_url https://www.google.cn/generate_204
 settings put global captive_portal_https_url https://www.google.cn/generate_204
 settings put global ntp_server 1.hk.pool.ntp.org
@@ -136,12 +158,13 @@ reboot
 ```
 ![30](2023040630.png)
 
-2. 初始化,点击Kali Chroot Manager开始初始化
+2. Initialize, click Kali Chroot Manager to start initializing
+
 ![31](2023040631.jpg)
 ![32](2023040632.jpg)
-3. 命令窗口可以使用,成功
+3. The command window is available, successful
 ![33](2023040633.jpg)
 
-# 刷入成功！
+# Flush successful!
 
-可以开启的逆向之旅了！后续还会更新OnePlus系列的Kali Nethunter刷入教程，敬请期待！ 想要直接购买刷好的设备，直接私信肉丝即可，vx：r0ysue 。卖设备还卖教程噢！助您升职加薪！
+It's a reverse journey that can be started! Look forward to updating the OnePlus Family's Kali Nethunter swipe-through tutorial as well! vx:r0ysue. Selling equipment and tutorials. Help you get promoted and get a raise!

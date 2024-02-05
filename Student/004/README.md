@@ -1,168 +1,173 @@
 [toc]
 
-# Pixel4平替：一加7刷NetHunter(android10) 指南
+# Pixel4 Tile: OnePlus 7-brush NetHunter (android10) guide
 
 ## Intro
 
-## 为什么要用OnePlus7这个设备
-1. Kali Nethunter官方支持一加7
-2. OnePlus7是属于一加前几代机型,价格不高,性能上相当于Pixel4代
-3. OnePlus7拥有高通9008的救砖模式,这个机器不管怎么折腾都可以恢复.
-    >> 救砖模式是高通CPU提供的特性
-4. OnePlus7在xda上面拥有众多的三方rom包，随便玩
+## Why use the OnePlus7 device
+1. Kali Nethunter officially supports OnePlus 7
+2. The OnePlus7 is an OnePlus previous generation model that is inexpensive and performs as well as the Pixel4 generation
+3. The OnePlus7 has the Qualcomm 9008 brick-rescue model, and the machine can be restored no matter how messy.
+>> Brick Rescue mode is a feature provided by Qualcomm CPU
+4. OnePlus7 has numerous tripartite rom packages on xda and plays with it
 
 
-本篇基于一加7手机，在性能上相当于Pixel四代手机。运行环境是安卓10。本文中用到的附件等位于百度盘中：链接：https://pan.baidu.com/s/1gtmCfqfQmEX5JvMZtvUH7w 提取码：euuo 
+Based on the OnePlus 7, this is the performance equivalent of four generations of Pixel phones. The operating environment is Android 10. The accessories used in this paper are located in Baidu Disk:Link:https://pan.baidu.com/s/1gtmCfqfQmEX5JvMZtvUH7wExtraction code:euuo
 
-该系列为学员优秀作品系列，附件apk、代码等位于我的项目中，大家可以自取：
+This series is a good series of works for the students. The accessories, apk, code and so on, are in my project. You can choose from:
 
 [https://github.com/r0ysue/AndroidSecurityStudy](20230403https://github.com/r0ysue/AndroidSecurityStudy)
 
-## 刷机是玄学,怎么做才科学
-1. 刷机需要测试各个版本的工具,很多时候不是你步骤错了,可能仅仅是使用的工具包版本不对
-方案:提供下面步骤用到的所有工具包,在附件里面
-2. 系统版本,OnePlus的系统版本众多,会影响结果,可能bootloader都解锁不了(这里有个伤心的故事)
-方案:提供刷机固件包,从头开始,这样肯定行
+## It's a myth how to make a brush. It's a science
+1. The brush requires testing the various versions of the tool, and it is not always that you have taken the wrong steps, it may simply be that the wrong version of the kit is being used
+Scenario: Provide all toolkits used in the following steps, inside the enclosure
+2. System Version, There are so many system versions of OnePlus that it will affect the results that the bootloader may not be unlocked (here's a sad story)
+Scenario: Provide a Brush Firmware Pack, Start Over, This Is Sure
 
-## 开始刷机
-### 下载安装高通驱动
+## Start Swiping
+### Download and Install Qualcomm Driver
 
-1. 安装高通9008驱动,驱动名称:"QDLoader_HS-USB_Driver_64bit_Setup.exe"
-+ 安装
+1. Install the Qualcomm 9008 driver named "QDLoader_HS-USB_Driver_64bit_Setup.exe"
++ Install
 ![11](2023041811.png)
 ![12](2023041812.png)
 ![13](2023041813.png)
 ![14](2023041814.png)
 ![15](2023041815.png)
-+ 用管理员权限打开cmd,输入命令开启测试模式,然后重启电脑
-```
++ Open cmd with administrator privileges, enter the command to turn on test mode, and then restart the computer
+```powershell
 bcdedit /set testsigning on
 ```
-+ 检查测试模式是否打开,重启后电脑桌面右下角出现下图所示就是成功,可继续下一步
++ Check if the test mode is turned on and the following image in the lower right corner of the PC's desktop after reboot indicates success, to continue to the next step
 
 ![19](2023041819.png)
 
-### 刷入固件包
+### Flash in the firmware package
 
-1. 电脑解压固件包guacamoleb_14_P.32_210127.zip,
-   ![20](2023041820.png)
-2. 启动软件MsmDownloadTool V4.0.exe
-   ![21](2023041821.png)
-3. 点击start,等待手机进入edl模式
-   ![22](2023041822.png)
-4. 手机进入edl模式,MsmDownloadTool会自动输入android 10系统
-+ 方式1:手机关机,数据线连接电脑,然后同时按住音量上键和下键
-+ 方式2: 如果手机还可以开机,还可以连接adb
-```
+1. The PC unpacks the firmware package guacamoleb_14_P.32_210127.zip.
+![20](2023041820.png)
+2. Boot the software MsmDownloadTool V4.0.exe
+![21](2023041821.png)
+3. Tap start and wait for your phone to enter edl mode
+![22](2023041822.png)
+4. The phone enters edl mode, and MsmDownloadTool automatically enters the android 10 system
++ Mode 1: Turn the phone on, connect the cable to the PC, and press and hold the volume up and down keys at the same time
++ Mode 2: If your phone is still on, you can also connect to adb
+
+```powershell
 adb reboot edl
 ```
+
 ![23](2023041823.png)
-5. 等待系统刷入,进入简单设置下
+
+5. Wait for the system to flush and enter the Simple Set-up
 ![24](2023041824.jpg)
 
-### 解锁手机bootloader
+### Unlock your phone bootloader
 
-1. 打开手机开发者模式, 开启adb调试
+1. Turn on Phone Developer Mode and turn on adb debugging
 ![2](202304182.jpg)
-2.  开启oem解锁
+2. Open oem unlock
 ![1](202304181.jpg)
-3.  使用命令,进入fastboot模式
-```
+3. Enter fastboot mode using the command
+```powershell
 adb reboot bootloader
 ```
-4.  使用命令解锁
-```
+4. Unlock with command
+```powershell
 fastboot oem unlock
 ```
-  ![24](2023041824.png)
+![24](2023041824.png)
 
-5. 选择"UNLOCK THE BOOTLOADER",等待重启,进入,重新设置usb调试和开发者模式
+5. Select "UNLOCK THE BOOTLOADER", wait for reboot, enter, reset usb debug and developer mode
   
-  ![18](2023041818.jpg)
+![18](2023041818.jpg)
 
-### 刷入twrp
+### Flush twrp
 
-1. 重启手机到fastboot模式
-```
+1. Restart your phone to fastboot mode
+```powershell
 adb reboot bootloader
 ```
-2. 刷入twrp
-```
+2. Flush twrp
+```powershell
 fastboot boot twrp.img
 ```
 ![25](2023041825.png)
 
-3. 这里安装完就直接进入revovery模式,twrp系统中,
-4. 操作界面选择 Advanced->Flash Current TWRP
+3. Once installed, go straight to revovery mode, twrp.
+4. Operational Interface Select Advanced->Flash Current TWRP
 
 ![26](2023041826.jpg)
 
-4. 操作界面选择 Wipe->Format Data->输入yes
+4. Operational Interface Select Wipe->Format Data->Enter yes
 
 ![27](2023041827.jpg)
 
-5. 这时候不要重启
+5. Do not restart at this time
 
-### 刷入Magisk
+### Flush Magisk
 
 1. Advanced->ADB Sideload->Swipe to Start Sideload
 ![28](2023041828.jpg)
 ![29](2023041829.jpg)
 ![30](2023041830.jpg)
-2. 输入命令,刷入Magisk.zip
+2. Enter the command to flush the Magisk.zip
 ![32](2023041832.png)
 ![31](2023041831.jpg)
 
-### 刷入Disable_Dm-Verity_ForceEncrypt_11.02.2020.zip
+### Flush Disable_Dm-Verity_ForceEncrypt_11.02.2020.zip
 
 1. Advanced->ADB Sideload->Swipe to Start Sideload
-2. 刷入Disable_Dm-Verity_ForceEncrypt_11.02.2020.zip,出现Select Option的时候,按音量+键
+2. Press the Volume + key when the Select Option appears by swiping the Disable_Dm-Verity_ForceEncrypt_11.02.2020.zip
 ![33](2023041833.png)
 ![34](2023041834.png)
-3. 重启,进入设置,其中有个设置选"无"
+3. Restart and enter the settings, one of which is selected as None
 ![35](2023041835.jpg)
 
-### 刷入nethunter
+### Flush nethunter
 
-1. 重启到fastboot模式,然后音量键-进入recovery模式,重新进入twrp
+1. Reboot to fastboot mode, then volume key - enter recovery mode, re-enter twrp
 ![36](2023041836.jpg)
 
 2. Advanced->ADB Sideload->Swipe to Start Sideload
-3. 输入命令,刷入"kernel-nethunter-2021.3-oneplus7-oos-ten.zip"
-```
-adb sideload kernel-nethunter-2021.3-oneplus7-oos-ten.zip 
+3. Enter the command to flush the "kernel-nethunter-2021.3-oneplus7-oos-ten.zip"
+
+```powershell
+adb sideload kernel-nethunter-2021.3-oneplus7-oos-ten.zip
 ```
 4. Advanced->ADB Sideload->Swipe to Start Sideload
-5. 输入命令,输入"nethunter-2022.1-oneplus7-oos-ten-kalifs-full.zip "
-```
-adb sideload nethunter-2022.1-oneplus7-oos-ten-kalifs-full.zip 
+5. Enter the command, enter "nethunter-2022.1-oneplus7-oos-ten-kalifs-full.zip"
+```powershell
+adb sideload nethunter-2022.1-oneplus7-oos-ten-kalifs-full.zip
 ```
 ![38](2023041838.png)
 ![39](2023041839.jpg)
 ![40](2023041840.jpg)
 ![41](2023041841.jpg)
 
-### 安装一个magisk
-1. 输入命令安装magisk.app
-```
+### Install a magisk
+1. Enter the command to install the magisk.app
+```powershell
 adb install magisk.app
 ```
 ![44](2023041844.png)
 ![45](2023041845.jpg)
 
-### 初始化Nethunter
-1. 联wifi,修改时间
-2. 打开图中红圈得nethunter
-   ![46](2023041846.jpg)
-3. 点击kali Chroot Manager
-   ![47](2023041847.jpg)
-4. 点击START KALI CHROOT
-   ![48](2023041848.jpg)
-5. 成功
-   ![49](2023041849.jpg)
-6. 验证,打开命令行窗口,输入命令
-   ```
-   apt update
-   ```
-   ![50](2023041850.jpg)
+### Initialize Nethunter
+1. wifi, Modified
+2. Open the red circle in the figure to get nethunter
+![46](2023041846.jpg)
+3. Tap kali Chroot Manager
+![47](2023041847.jpg)
+4. Tap START KALI CHROOT
+![48](2023041848.jpg)
+5. Success
+![49](2023041849.jpg)
+6. Verify, open a command line window, and enter a command
+
+```bash
+apt update
+```
+![50](2023041850.jpg)
    
